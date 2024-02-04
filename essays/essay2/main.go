@@ -15,7 +15,7 @@ func main() {
 	zipFilePath := flag.String("file", "", "Specify the compressed file path")
 	searchText := flag.String("text", "", "Specify texts to search for by separating them with (,)")
 	outputFile := flag.String("output", "", "Specify the path to the output file to save the results")
-	caseSensitive := flag.Bool("case-sensitive", false, "Enable case-sensitive search")
+	caseSensitive := flag.Bool("case-sensitive", false, "Enable case-sensitive search (default -> false)")
 	flag.Parse()
 
 	// control
