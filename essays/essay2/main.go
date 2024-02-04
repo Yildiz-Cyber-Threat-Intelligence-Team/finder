@@ -15,6 +15,7 @@ func main() {
 	zipFilePath := flag.String("file", "", "Specify the compressed file path")
 	searchText := flag.String("text", "", "Specify texts to search for by separating them with (,)")
 	outputFile := flag.String("output", "", "Specify the path to the output file to save the results")
+	caseSensitive := flag.Bool("case-sensitive", false, "Enable case-sensitive search (default -> false)")
 	flag.Parse()
 
 	// control
@@ -36,7 +37,14 @@ func main() {
 	// results
 	var searchResults []string
 
-	//
+	// case sensitivity
+	comparisonFunc := strings.Contains
+	if !*caseSensitive {
+		comparisonFunc = func(s, substr string) bool {
+			return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+		}
+	}
+
 	for _, file := range zipFile.File {
 		if file.FileInfo().IsDir() {
 			continue
@@ -54,12 +62,9 @@ func main() {
 		// scan
 		for scanner.Scan() {
 			line := scanner.Text()
-			lowercaseLine := strings.ToLower(line) // lower words
 
 			for _, keyword := range searchKeywords {
-				lowercaseKeyword := strings.ToLower(keyword) // lower search words
-
-				if strings.Contains(lowercaseLine, lowercaseKeyword) {
+				if comparisonFunc(line, keyword) {
 					result := fmt.Sprintf("File: %s\n", file.Name)
 					result += fmt.Sprintf("Line Number: %d\n", lineNumber)
 					result += fmt.Sprintf("Line: %s\n", line)
