@@ -12,4 +12,4 @@ Finder Tool is a tool that extracts data from a compressed file and searches for
 
 **Usage**
 
-    go run main.go -file path/to/myfile.zip -text lorem,ipsum -output path/to/results.txt -case-sensitive true
+    go run main.go -file path/to/myfile.zip -text LOREM,ipsum -output path/to/results.txt -case-sensitive true
