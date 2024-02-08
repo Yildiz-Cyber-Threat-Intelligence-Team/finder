@@ -8,9 +8,20 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/mbndr/figlet4go"
 )
 
 func main() {
+	ascii := figlet4go.NewAsciiRender()
+	options := figlet4go.NewRenderOptions()
+	options.FontColor = []figlet4go.Color{
+		figlet4go.ColorGreen,
+	}
+	options.FontName = "larry3d"
+	renderStr, _ := ascii.RenderOpts("FINDER TOOL", options)
+	fmt.Println(renderStr)
+
 	// flags
 	zipFilePath := flag.String("file", "", "Specify the compressed file path - required")
 	searchText := flag.String("text", "", "Specify the text to search for or specify multiple texts separated by (,) - required")
@@ -67,7 +78,6 @@ func main() {
 				compareLine = strings.ToLower(line)
 			}
 
-			//compare words
 			for _, keyword := range searchKeywords {
 				compareKeyword := keyword
 				if !*caseSensitive {
