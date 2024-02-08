@@ -26,13 +26,13 @@ func main() {
 	zipFilePath := flag.String("file", "", "Specify the compressed file path - required")
 	searchText := flag.String("text", "", "Specify the text to search for or specify multiple texts separated by (,) - required")
 	outputFile := flag.String("output", "", "Specify the path to the output file to save the results - optional")
-	caseSensitive := flag.Bool("case-sensitive", false, "Specify whether the search should be case-sensitive - optional")
+	caseSensitive := flag.Bool("case-sensitive", false, "Specify whether the search should be case-sensitive (default: false) - optional")
 	helpFlag := flag.Bool("help", false, "Help for using the finder tool")
 	flag.Parse()
 
 	// control
 	if *helpFlag {
-		fmt.Println("Flags;")
+		fmt.Println("Flags")
 		flag.PrintDefaults()
 		return
 	}
@@ -55,11 +55,18 @@ func main() {
 	// results
 	var searchResults []string
 
-	//
+	var totalSize int64
+	fileCount := 0
+
 	for _, file := range zipFile.File {
 		if file.FileInfo().IsDir() {
 			continue
 		}
+
+		fileCount++
+
+		// increment total size
+		totalSize += file.FileInfo().Size()
 
 		// read
 		f, err := file.Open()
@@ -102,6 +109,12 @@ func main() {
 
 		f.Close()
 	}
+
+	// total size and file count
+	fmt.Printf("Compressed File Properties\n")
+	fmt.Printf("Total Size: %d bytes\n", totalSize)
+	fmt.Printf("File Count: %d\n", fileCount)
+	fmt.Printf("----------\n\n")
 
 	// output
 	if len(searchResults) > 0 {
