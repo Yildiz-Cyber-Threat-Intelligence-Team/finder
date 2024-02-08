@@ -1,3 +1,3 @@
 module tool
 
-go 1.21.32
+go 1.21.3
