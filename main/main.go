@@ -188,8 +188,7 @@ func searchInArchive(archivePath string, searchText string, fileType string, out
 	return results, nil
 }
 
-// searchInTextFile, normal bir metin dosyası içinde arama yapar.
-func searchInTextFile(filePath string, searchText string, outputFilePath string) ([]SearchResult, error) {
+func searchInTextFile(filePath string, searchText string, outputFilePath string, deleteFile bool) ([]SearchResult, error) {
 	var results []SearchResult
 	var outFile *os.File
 	var err error
@@ -243,6 +242,16 @@ func searchInTextFile(filePath string, searchText string, outputFilePath string)
 	}
 
 	fmt.Println("Toplam süre:", duration)
+
+	// Eğer deleteFile true ise dosyayı sil
+	if deleteFile {
+		err := os.Remove(filePath)
+		if err != nil {
+			fmt.Println("Dosya silinemedi:", err)
+		} else {
+			fmt.Println("Dosya başarıyla silindi.")
+		}
+	}
 
 	return results, nil
 }
@@ -300,83 +309,47 @@ func printUsage() {
 Arama Aracı Kullanım Kılavuzu:
 
 Kullanım: 
-  go run main.go "arsiv_dosya_yolu" "arama_metni" "dosya_turu" [cikti_dosyasi]
+  go run main.go "arsiv_dosya_yolu" "arama_metni" "dosya_turu" [cikti_dosyasi] [-delete]
 
 Örnek:
-  go run main.go "dosya.rar" "searchWord" ".rar" [output.txt]
+  go run main.go "dosya.rar" "searchWord" ".rar" [output.txt] -delete
 
 Parametreler:
   - "arsiv_dosya_yolu": Arama yapılacak arşiv dosyasının veya metin dosyasının yolu.
   - "arama_metni": Arşiv dosyası veya metin dosyası içinde aranacak metin.
   - "dosya_turu": Arşiv dosyasının türü (".zip", ".rar", ".tar.gz", ".tgz"). Metin dosyası için bu parametre kullanılmaz.
   - [cikti_dosyasi]: İsteğe bağlı olarak, sonuçların kaydedileceği dosyanın yolu.
+  - [-delete]: Dosyanın silinmesi gerektiğini belirtir.
 
 Örnekler:
-  - Dosya.rar arşiv dosyasında "searchWord" ifadesini aramak için:
-    go run main.go "dosya.rar" "searchWord" ".rar"
-  - Metin.txt dosyasında "arama kelimesi" ifadesini arayıp sonuçları output.txt dosyasına kaydetmek için:
-    go run main.go "metin.txt" "arama kelimesi" output.txt
+  - Dosya.rar arşiv dosyasında "searchWord" ifadesini aramak ve dosyayı silmek için:
+    go run main.go "dosya.rar" "searchWord" ".rar" -delete
 	`)
 }
 
 func main() {
+	// Komut satırı argümanlarını al
+	args := os.Args
 
-	asciiArt := `███████████████████████████████████████████████████████████████████████████████
-	███████████████████████████████████████▓███████████████████████████████████████
-	█████████████████████████████████████▓░░░▓█████████████████████████████████████
-	████████████████████████████████████▒░▓▒░░▓████████████████████████████████████
-	██████████████████████████████████▓░▒██▓░░░████████████████████████████████████
-	█████████████████████████████████▓░▓████░░░░███████████████████████████████████
-	███████████████████████████▓▓▓▓▓▒░██████░░█▒░▓█████████████████████████████████
-	█████████████████████████▓░▒▒▒▒▒▓███████▒░███▒░▒▓██████████████████████████████
-	████████████████████████░░█████████████▓░▓█████▒░▒▓████████████████████████████
-	████████████████████████▒░██████▒░███████░░████████▓░░█████████████████████████
-	██████████████████▓░░▒▒▒▒▓█████░░░▒██████▒░▒█████████░▒████████████████████████
-	██████████████████░▒██████████▒░█░░███████▓░▒████████░▒████████████████████████
-	█████████████████▓░██████████▒░██▒░█████████▒░▒██████░░████████████████████████
-	█████████████████░▒██████▓▒▒░░████▓███████████░░██████░▒███████████████████████
-	████████████████▓░█████▓░▒▓██████████▒████████▓░███████▒▒██████████████████████
-	████████████████░▒█████▒░████████████░▒████████████████████████████████████████
-	█████████▓▒▒▒▒▒░░░▒▒▒▒▒░░▒▒▒▒▒▒▒▒▒▒▒░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████▓▒▒▒▒▒▒▒▒▒▒▒▒████████
-	███████████████████████████████████████████████████████████████████████████████
-	████████████████▓███████████▓████████▓██████████▓█████████▓▓███████████████████
-	████████████████▒░▓████████░░████████░▒████████▓░▓███████▒░▓███████████████████
-	██████████████████░░▓██████░░████████░░████████░░███████░░█████████████████████
-	███████████████████▓░▒█████░░████████▓░██████▒░▓███████▒░██████████████████████
-	█████████████████████▒░████▒░▓████████░▒████░▒████▓▓▒▒░▒███████████████████████
-	██████████████████████░█████▓▒░▒██████▓░▒██▓░███▓░▒▓▓██████████████████████████
-	██████████████████████░████████▒░██████▓░▒█░▒███▓░▓████████████████████████████
-	██████████████████████░▓███████▒░████████░░░▓███▓░▓████████████████████████████
-	██████████████████████▒░░░░░▒██▒░█████████▓▓████▓░▓████████████████████████████
-	███████████████████████████▒░███░▓███░▓█████████▒░█████████████████████████████
-	███████████████████████████▓░▓██▒░██▒░░████████▒░██████████████████████████████
-	████████████████████████████░▒███░▓█░░░▒██████▒░▓██████████████████████████████
-	████████████████████████████▓░░▓█▒░░░█▓░▒▓███▒░▓███████████████████████████████
-	███████████████████████████████▒░░░░▒████▓▒░░░█████████████████████████████████
-	█████████████████████████████████▓░░▓██████████████████████████████████████████
-	███████████████████████████████████████████████████████████████████████████████
-	 
-			░█▀▀█ 	▒█░▄▀ 	▀█▀    ▒█▄░▒█ 	▒█▀▀█  	▀█▀ 
-			▒█▄▄█ 	▒█▀▄░ 	▒█░    ▒█▒█▒█ 	▒█░░░  	▒█░ 
-			▒█░▒█ 	▒█░▒█ 	▄█▄    ▒█░░▀█ 	▒█▄▄█ 	▄█▄ 
-	
-		▒█▀▀▀ ▀█▀ ▒█▄░▒█ ▒█▀▀▄ ▒█▀▀▀ ▒█▀▀█  	▀▀█▀▀ ▒█▀▀▀█ ▒█▀▀▀█ ▒█░░░ 
-		▒█▀▀▀ ▒█░ ▒█▒█▒█ ▒█░▒█ ▒█▀▀▀ ▒█▄▄▀  	░▒█░░ ▒█░░▒█ ▒█░░▒█ ▒█░░░ 
-		▒█░░░ ▄█▄ ▒█░░▀█ ▒█▄▄▀ ▒█▄▄▄ ▒█░▒█  	░▒█░░ ▒█▄▄▄█ ▒█▄▄▄█ ▒█▄▄█`
-
-	fmt.Println(asciiArt)
-
-	if len(os.Args) < 4 || len(os.Args) > 5 {
+	if len(args) < 4 || len(args) > 6 {
 		printUsage()
 		return
 	}
 
-	archiveFilePath := os.Args[1]
-	searchText := os.Args[2]
-	fileType := os.Args[3]
+	archiveFilePath := args[1]
+	searchText := args[2]
+	fileType := args[3]
 	var outputFilePath string
-	if len(os.Args) == 5 {
-		outputFilePath = os.Args[4]
+	var deleteFile bool
+
+	if len(args) >= 5 {
+		for _, arg := range args[4:] {
+			if arg == "-delete" {
+				deleteFile = true
+			} else {
+				outputFilePath = arg
+			}
+		}
 	}
 
 	// Dosya yolunu tam olarak almak için filepath.Clean kullanın
@@ -387,7 +360,7 @@ func main() {
 
 	// Dosya türü arşiv dosyası değilse, metin dosyası içinde arama yap
 	if fileType != ".zip" && fileType != ".rar" && fileType != ".tar.gz" && fileType != ".tgz" {
-		results, err := searchInTextFile(fullArchivePath, searchText, outputFilePath)
+		results, err := searchInTextFile(fullArchivePath, searchText, outputFilePath, deleteFile)
 		if err != nil {
 			fmt.Println("Hata:", err)
 			return
@@ -427,5 +400,15 @@ func main() {
 	// Dosyaya yazma işlemi yapılmışsa bilgi mesajı göster
 	if outputFilePath != "" {
 		fmt.Println("Sonuçlar", outputFilePath, "dosyasına kaydedildi.")
+	}
+
+	// Eğer deleteFile true ise dosyayı sil
+	if deleteFile {
+		err := os.Remove(fullArchivePath)
+		if err != nil {
+			fmt.Println("Dosya silinemedi:", err)
+		} else {
+			fmt.Println("Dosya başarıyla silindi.")
+		}
 	}
 }
