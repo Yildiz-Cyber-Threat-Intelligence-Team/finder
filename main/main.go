@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/nwaples/rardecode"
 )
 
@@ -317,6 +318,16 @@ Parametreler:
   - Metin.txt dosyasında "arama kelimesi" ifadesini arayıp sonuçları output.txt dosyasına kaydetmek için:
     go run main.go "metin.txt" "arama kelimesi" output.txt
 	`)
+}
+
+func displayAsciiArt() {
+	file, err := os.ReadFile("ascii_art.txt")
+	if err != nil {
+		c := color.New(color.FgRed, color.Bold)
+		c.Println("ASCII art could not be displayed:", err)
+		return
+	}
+	fmt.Println(string(file))
 }
 
 func main() {
