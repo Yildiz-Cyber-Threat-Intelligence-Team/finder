@@ -2,6 +2,7 @@
 
 ![asciiart](ascii_art.png)
 
+Bu program, belirtilen bir metin dosyasında belirli bir metni arayan basit bir metin dosyası arama programıdır. Kullanıcı, aranacak metni ve aranacak dosyanın yolunu parametre olarak verir. Program, dosyayı açar, her satırı tarar ve aranan metni içeren satırları terminalde gösterir. Eğer aranan metin bulunamazsa, buna dair bir mesaj verir. Arama işlemi tamamlandıktan sonra geçen süreyi de kullanıcıya bildirir.
 
 **Parametreler**
 
@@ -13,3 +14,10 @@
 **Kullanım**
 
     go run main.go "arsiv_dosya_yolu" "arama_metni" "dosya_turu" [cikti_dosyasi]
+
+**Örnekler**
+
+    Dosya.rar arşiv dosyasında "searchWord" ifadesini aramak için
+        -> go run main.go "dosya.rar" "searchWord" ".rar"
+    Metin.txt dosyasında "arama kelimesi" ifadesini arayıp sonuçları output.txt dosyasına kaydetmek için
+        -> go run main.go "metin.txt" "arama kelimesi" output.txt
