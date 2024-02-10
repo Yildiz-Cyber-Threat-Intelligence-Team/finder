@@ -1,0 +1,28 @@
+Arama Başlangıç Zamanı: 10.02.2024 12:45
+Dosya: yeni.txt
+Aranan Metin: RUN
+Satırlar:
+RUN = İŞLETMEK
+---------------------------------------
+Arama Bitiş Zamanı: 10.02.2024 12:45
+Arama Başlangıç Zamanı: 10.02.2024 13:03
+Dosya: yeni.txt
+Aranan Metin: RUN
+Satırlar:
+RUN = İŞLETMEK
+---------------------------------------
+Arama Bitiş Zamanı: 10.02.2024 13:03
+Arama Başlangıç Zamanı: 10.02.2024 13:04
+Dosya: yeni.txt
+Aranan Metin: RUN
+Satırlar:
+RUN = İŞLETMEK
+---------------------------------------
+Arama Bitiş Zamanı: 10.02.2024 13:04
+Arama Başlangıç Zamanı: 10.02.2024 13:12
+Dosya: yeni.txt
+Aranan Metin: RUN
+Satırlar:
+RUN = İŞLETMEK
+---------------------------------------
+Arama Bitiş Zamanı: 10.02.2024 13:12
