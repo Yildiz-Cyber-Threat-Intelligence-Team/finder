@@ -18,6 +18,6 @@ Bu program, belirtilen bir metin dosyasında belirli bir metni arayan basit bir 
 **Örnekler**
 
     Dosya.rar arşiv dosyasında "searchWord" ifadesini aramak için
-        -> go run main.go "dosya.rar" "searchWord" ".rar"
+    ↳ go run main.go "dosya.rar" "searchWord" ".rar"
     Metin.txt dosyasında "arama kelimesi" ifadesini arayıp sonuçları output.txt dosyasına kaydetmek için
-        -> go run main.go "metin.txt" "arama kelimesi" output.txt
+    ↳ go run main.go "metin.txt" "arama kelimesi" output.txt
