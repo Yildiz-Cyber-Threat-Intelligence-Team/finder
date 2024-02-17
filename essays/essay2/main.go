@@ -19,9 +19,9 @@ func main() {
 	zipFilePath := flag.String("file", "", "Specify the compressed file path - required")
 	searchText := flag.String("text", "", "Specify the text to search for or specify multiple texts separated by (,) - required")
 	outputFile := flag.String("output", "", "Specify the path to the output file to save the results - optional")
-	caseSensitive := flag.Bool("case-sensitive", false, "Specify whether the search should be case-sensitive - optional")
+	caseSensitive := flag.Bool("case-sensitive", false, "Specify whether the search should be case-sensitive (default: false) - optional")
 	helpFlag := flag.Bool("help", false, "Help for using the finder tool")
-	deleteFile := flag.Bool("del", false, "Specify whether to delete the compressed file after search - optional")
+	deleteFile := flag.Bool("del", false, "Specify whether to delete the compressed file after search (default: false) - optional")
 	flag.Parse()
 
 	// control
@@ -54,9 +54,11 @@ func main() {
 
 	var totalSize int64
 	fileCount := 0
+	folderCount := 0
 
 	for _, file := range zipFile.File {
 		if file.FileInfo().IsDir() {
+			folderCount++
 			continue
 		}
 
@@ -90,7 +92,7 @@ func main() {
 				}
 
 				if strings.Contains(compareLine, compareKeyword) {
-					result := fmt.Sprintf("File: %s\n", file.Name)
+					result := fmt.Sprintf("File Name: %s\n", file.Name)
 					result += fmt.Sprintf("Line Number: %d\n", lineNumber)
 					result += fmt.Sprintf("Line: %s\n", line)
 					result += "--------------------\n"
@@ -106,9 +108,10 @@ func main() {
 		}
 	}
 
-	// total size and file count
+	// total size, file and folder count
 	fmt.Printf("Compressed File Properties\n")
 	fmt.Printf("Total Size: %d bytes\n", totalSize)
+	fmt.Printf("Folder Count: %d\n", folderCount)
 	fmt.Printf("File Count: %d\n", fileCount)
 	fmt.Printf("--------------------\n\n")
 
@@ -149,6 +152,7 @@ func main() {
 	}
 
 }
+
 func displayAsciiArt() {
 	file, err := os.ReadFile("ascii_art.txt")
 	if err != nil {
