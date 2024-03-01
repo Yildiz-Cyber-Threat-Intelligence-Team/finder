@@ -18,7 +18,7 @@ import (
 
 type SearchResult struct {
 	FileName string
-	Lines    []string // Satırlardaki metinlerin listesi
+	Lines    []string
 }
 
 func OpenArchive(path string, fileType string) (io.ReadCloser, error) {
@@ -34,7 +34,7 @@ func OpenArchive(path string, fileType string) (io.ReadCloser, error) {
 		}
 		return gzip.NewReader(fr)
 	default:
-		return nil, fmt.Errorf("Dosya formatı desteklenmiyor: %s", fileType)
+		return nil, fmt.Errorf("Unsupported file format: %s", fileType)
 	}
 }
 
@@ -43,10 +43,8 @@ func searchInArchive(archivePath string, searchText string, fileType string, out
 	var outFile *os.File
 	var err error
 
-	// Başlangıç zamanını al
 	startTime := time.Now()
 
-	// Eğer bir çıktı dosyası belirtilmişse, dosyayı üstüne yazacak şekilde aç
 	if outputFilePath != "" {
 		outFile, err = os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
@@ -54,8 +52,7 @@ func searchInArchive(archivePath string, searchText string, fileType string, out
 		}
 		defer outFile.Close()
 
-		// Dosyaya başlama zamanını yaz
-		if _, err := outFile.WriteString(fmt.Sprintf("Arama Başlangıç Zamanı: %s\n", startTime.Format("02.01.2006 15:04"))); err != nil {
+		if _, err := outFile.WriteString(fmt.Sprintf("Search Start Time: %s\n", startTime.Format("02.01.2006 15:04"))); err != nil {
 			return nil, err
 		}
 	}
@@ -67,7 +64,7 @@ func searchInArchive(archivePath string, searchText string, fileType string, out
 	defer archive.Close()
 
 	switch archive.(type) {
-	case *os.File:
+	case *os.File: // ZIP file
 		zipReader, err := zip.OpenReader(archivePath)
 		if err != nil {
 			return nil, err
@@ -170,20 +167,18 @@ func searchInArchive(archivePath string, searchText string, fileType string, out
 			}
 		}
 	default:
-		return nil, fmt.Errorf("Desteklenmeyen arşiv türü")
+		return nil, fmt.Errorf("Unsupported archive type")
 	}
 
-	// Geçen zamanı hesapla
 	duration := time.Since(startTime)
 
-	// Sonuç dosyasına bitiş zamanını yaz
 	if outFile != nil {
-		if _, err := outFile.WriteString(fmt.Sprintf("Arama Bitiş Zamanı: %s\n", time.Now().Format("02.01.2006 15:04"))); err != nil {
+		if _, err := outFile.WriteString(fmt.Sprintf("Search End Time: %s\n", time.Now().Format("02.01.2006 15:04"))); err != nil {
 			return nil, err
 		}
 	}
 
-	fmt.Println("Toplam süre:", duration)
+	fmt.Println("Total time:", duration)
 
 	return results, nil
 }
@@ -193,10 +188,8 @@ func searchInTextFile(filePath string, searchText string, outputFilePath string,
 	var outFile *os.File
 	var err error
 
-	// Başlangıç zamanını al
 	startTime := time.Now()
 
-	// Eğer bir çıktı dosyası belirtilmişse, dosyayı üstüne yazacak şekilde aç
 	if outputFilePath != "" {
 		outFile, err = os.OpenFile(outputFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
@@ -204,8 +197,7 @@ func searchInTextFile(filePath string, searchText string, outputFilePath string,
 		}
 		defer outFile.Close()
 
-		// Dosyaya başlama zamanını yaz
-		if _, err := outFile.WriteString(fmt.Sprintf("Arama Başlangıç Zamanı: %s\n", startTime.Format("02.01.2006 15:04"))); err != nil {
+		if _, err := outFile.WriteString(fmt.Sprintf("Search Start Time: %s\n", startTime.Format("02.01.2006 15:04"))); err != nil {
 			return nil, err
 		}
 	}
@@ -231,25 +223,22 @@ func searchInTextFile(filePath string, searchText string, outputFilePath string,
 		})
 	}
 
-	// Geçen zamanı hesapla
 	duration := time.Since(startTime)
 
-	// Sonuç dosyasına bitiş zamanını yaz
 	if outFile != nil {
-		if _, err := outFile.WriteString(fmt.Sprintf("Arama Bitiş Zamanı: %s\n", time.Now().Format("02.01.2006 15:04"))); err != nil {
+		if _, err := outFile.WriteString(fmt.Sprintf("Search End Time: %s\n", time.Now().Format("02.01.2006 15:04"))); err != nil {
 			return nil, err
 		}
 	}
 
-	fmt.Println("Toplam süre:", duration)
+	fmt.Println("Total time:", duration)
 
-	// Eğer deleteFile true ise dosyayı sil
 	if deleteFile {
 		err := os.Remove(filePath)
 		if err != nil {
-			fmt.Println("Dosya silinemedi:", err)
+			fmt.Println("Error deleting file:", err)
 		} else {
-			fmt.Println("Dosya başarıyla silindi.")
+			fmt.Println("File successfully deleted.")
 		}
 	}
 
@@ -269,9 +258,9 @@ func findLinesContainingText(content string, searchText string) []string {
 }
 
 func printResults(fileName string, searchText string, lines []string) {
-	fmt.Println("Dosya:", fileName)
-	fmt.Println("Aranan Metin:", searchText)
-	fmt.Println("Satırlar:")
+	fmt.Println("File:", fileName)
+	fmt.Println("Searched Text:", searchText)
+	fmt.Println("Lines:")
 	for _, line := range lines {
 		fmt.Println(line)
 	}
@@ -279,25 +268,35 @@ func printResults(fileName string, searchText string, lines []string) {
 }
 
 func writeResultToFile(file *os.File, fileName string, searchText string, lines []string) error {
-	// Dosya bilgilerini dosyaya yaz
-	if _, err := file.WriteString(fmt.Sprintf("Dosya: %s\n", fileName)); err != nil {
+
+	if _, err := file.Seek(0, io.SeekEnd); err != nil {
 		return err
 	}
-	// Aranan metni dosyaya yaz
-	if _, err := file.WriteString(fmt.Sprintf("Aranan Metin: %s\n", searchText)); err != nil {
+
+	writer := bufio.NewWriter(file)
+
+	if _, err := writer.WriteString(fmt.Sprintf("File: %s\n", fileName)); err != nil {
 		return err
 	}
-	// Eşleşen satırları dosyaya yaz
-	if _, err := file.WriteString("Satırlar:\n"); err != nil {
+
+	if _, err := writer.WriteString(fmt.Sprintf("Search Text: %s\n", searchText)); err != nil {
+		return err
+	}
+
+	if _, err := writer.WriteString("Lines:\n"); err != nil {
 		return err
 	}
 	for _, line := range lines {
-		if _, err := file.WriteString(fmt.Sprintf("%s\n", line)); err != nil {
+		if _, err := writer.WriteString(fmt.Sprintf("%s\n", line)); err != nil {
 			return err
 		}
 	}
-	// Ayırıcı satırı dosyaya yaz
-	if _, err := file.WriteString("---------------------------------------\n"); err != nil {
+
+	if _, err := writer.WriteString("---------------------------------------\n"); err != nil {
+		return err
+	}
+
+	if err := writer.Flush(); err != nil {
 		return err
 	}
 
@@ -306,76 +305,26 @@ func writeResultToFile(file *os.File, fileName string, searchText string, lines 
 
 func printUsage() {
 	fmt.Println(`
-Arama Aracı Kullanım Kılavuzu:
+Usage Guide:
 
-Kullanım: 
-  go run main.go "arsiv_dosya_yolu" "arama_metni" "dosya_turu" [cikti_dosyasi] [-delete]
+    Search for text within an archive file:
+        main <archive_file> "<search_text>" <file_type> [output_file] [-d]
+            <archive_file>: The path to the archive file to search within.
+            "<search_text>": The text to search for (enclose in double quotes if it contains spaces).
+            <file_type>: The type of the archive file (e.g., .zip, .rar, .tar.gz).
+            [output_file]: Optional. The path to the output file where search results will be saved.
+            [-d]: Optional. Flag to delete the original file after searching.
 
-Örnek:
-  go run main.go "dosya.rar" "searchWord" ".rar" [output.txt] -delete
-
-Parametreler:
-  - "arsiv_dosya_yolu": Arama yapılacak arşiv dosyasının veya metin dosyasının yolu.
-  - "arama_metni": Arşiv dosyası veya metin dosyası içinde aranacak metin.
-  - "dosya_turu": Arşiv dosyasının türü (".zip", ".rar", ".tar.gz", ".tgz"). Metin dosyası için bu parametre kullanılmaz.
-  - [cikti_dosyasi]: İsteğe bağlı olarak, sonuçların kaydedileceği dosyanın yolu.
-  - [-delete]: Dosyanın silinmesi gerektiğini belirtir.
-
-Örnekler:
-  - Dosya.rar arşiv dosyasında "searchWord" ifadesini aramak ve dosyayı silmek için:
-    go run main.go "dosya.rar" "searchWord" ".rar" -delete
-	`)
+    Search for text within a text file:
+        main <text_file> "<search_text>" [output_file] [-d]
+            <text_file>: The path to the text file to search within.
+            "<search_text>": The text to search for (enclose in double quotes if it contains spaces).
+            [output_file]: Optional. The path to the output file where search results will be saved.
+            [-d]: Optional. Flag to delete the original file after searching.
+    `)
 }
 
 func main() {
-
-	asciiArt :=
-		`██████████████████████████████████████████████████████████████████████████████
-	███████████████████████████████████████▓███████████████████████████████████████
-	█████████████████████████████████████▓░░░▓█████████████████████████████████████
-	████████████████████████████████████▒░▓▒░░▓████████████████████████████████████
-	██████████████████████████████████▓░▒██▓░░░████████████████████████████████████
-	█████████████████████████████████▓░▓████░░░░███████████████████████████████████
-	███████████████████████████▓▓▓▓▓▒░██████░░█▒░▓█████████████████████████████████
-	█████████████████████████▓░▒▒▒▒▒▓███████▒░███▒░▒▓██████████████████████████████
-	████████████████████████░░█████████████▓░▓█████▒░▒▓████████████████████████████
-	████████████████████████▒░██████▒░███████░░████████▓░░█████████████████████████
-	██████████████████▓░░▒▒▒▒▓█████░░░▒██████▒░▒█████████░▒████████████████████████
-	██████████████████░▒██████████▒░█░░███████▓░▒████████░▒████████████████████████
-	█████████████████▓░██████████▒░██▒░█████████▒░▒██████░░████████████████████████
-	█████████████████░▒██████▓▒▒░░████▓███████████░░██████░▒███████████████████████
-	████████████████▓░█████▓░▒▓██████████▒████████▓░███████▒▒██████████████████████
-	████████████████░▒█████▒░████████████░▒████████████████████████████████████████
-	█████████▓▒▒▒▒▒░░░▒▒▒▒▒░░▒▒▒▒▒▒▒▒▒▒▒░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒█████▓▒▒▒▒▒▒▒▒▒▒▒▒████████
-	███████████████████████████████████████████████████████████████████████████████
-	████████████████▓███████████▓████████▓██████████▓█████████▓▓███████████████████
-	████████████████▒░▓████████░░████████░▒████████▓░▓███████▒░▓███████████████████
-	██████████████████░░▓██████░░████████░░████████░░███████░░█████████████████████
-	███████████████████▓░▒█████░░████████▓░██████▒░▓███████▒░██████████████████████
-	█████████████████████▒░████▒░▓████████░▒████░▒████▓▓▒▒░▒███████████████████████
-	██████████████████████░█████▓▒░▒██████▓░▒██▓░███▓░▒▓▓██████████████████████████
-	██████████████████████░████████▒░██████▓░▒█░▒███▓░▓████████████████████████████
-	██████████████████████░▓███████▒░████████░░░▓███▓░▓████████████████████████████
-	██████████████████████▒░░░░░▒██▒░█████████▓▓████▓░▓████████████████████████████
-	███████████████████████████▒░███░▓███░▓█████████▒░█████████████████████████████
-	███████████████████████████▓░▓██▒░██▒░░████████▒░██████████████████████████████
-	████████████████████████████░▒███░▓█░░░▒██████▒░▓██████████████████████████████
-	████████████████████████████▓░░▓█▒░░░█▓░▒▓███▒░▓███████████████████████████████
-	███████████████████████████████▒░░░░▒████▓▒░░░█████████████████████████████████
-	█████████████████████████████████▓░░▓██████████████████████████████████████████
-	███████████████████████████████████████████████████████████████████████████████
-	 
-			░█▀▀█ 	▒█░▄▀ 	▀█▀    ▒█▄░▒█ 	▒█▀▀█  	▀█▀ 
-			▒█▄▄█ 	▒█▀▄░ 	▒█░    ▒█▒█▒█ 	▒█░░░  	▒█░ 
-			▒█░▒█ 	▒█░▒█ 	▄█▄    ▒█░░▀█ 	▒█▄▄█ 	▄█▄ 
-	
-		▒█▀▀▀ ▀█▀ ▒█▄░▒█ ▒█▀▀▄ ▒█▀▀▀ ▒█▀▀█  	▀▀█▀▀ ▒█▀▀▀█ ▒█▀▀▀█ ▒█░░░ 
-		▒█▀▀▀ ▒█░ ▒█▒█▒█ ▒█░▒█ ▒█▀▀▀ ▒█▄▄▀  	░▒█░░ ▒█░░▒█ ▒█░░▒█ ▒█░░░ 
-		▒█░░░ ▄█▄ ▒█░░▀█ ▒█▄▄▀ ▒█▄▄▄ ▒█░▒█  	░▒█░░ ▒█▄▄▄█ ▒█▄▄▄█ ▒█▄▄█
-	`
-	fmt.Println(asciiArt)
-
-	// Komut satırı argümanlarını al
 	args := os.Args
 
 	if len(args) < 4 || len(args) > 6 {
@@ -383,15 +332,12 @@ func main() {
 		return
 	}
 
-	archiveFilePath := args[1]
-	searchText := args[2]
-	fileType := args[3]
-	var outputFilePath string
+	var archiveFilePath, searchText, fileType, outputFilePath string
 	var deleteFile bool
 
 	if len(args) >= 5 {
 		for _, arg := range args[4:] {
-			if arg == "-delete" {
+			if arg == "-d" {
 				deleteFile = true
 			} else {
 				outputFilePath = arg
@@ -399,63 +345,58 @@ func main() {
 		}
 	}
 
-	// Dosya yolunu tam olarak almak için filepath.Clean kullanın
+	archiveFilePath = args[1]
+	searchText = args[2]
+	fileType = args[3]
+
 	fullArchivePath := filepath.Clean(archiveFilePath)
 
-	// Arama metnini tırnak içine alın
 	searchText = strings.Trim(searchText, "\"")
 
-	// Dosya türü arşiv dosyası değilse, metin dosyası içinde arama yap
 	if fileType != ".zip" && fileType != ".rar" && fileType != ".tar.gz" && fileType != ".tgz" {
 		results, err := searchInTextFile(fullArchivePath, searchText, outputFilePath, deleteFile)
 		if err != nil {
-			fmt.Println("Hata:", err)
+			fmt.Println("Error:", err)
 			return
 		}
 
-		// Eğer sonuç yoksa dosyaya yazma işlemi yapma
 		if len(results) == 0 {
-			fmt.Println("Arama tamamlandı. Sonuç bulunamadı.")
+			fmt.Println("Search completed. No results found.")
 			return
 		}
 
-		fmt.Println("Arama tamamlandı. Sonuçlar terminale yazıldı.")
+		fmt.Println("Search completed. Results printed to the terminal.")
 
-		// Dosyaya yazma işlemi yapılmışsa bilgi mesajı göster
 		if outputFilePath != "" {
-			fmt.Println("Sonuçlar", outputFilePath, "dosyasına kaydedildi.")
+			fmt.Println("Results saved to", outputFilePath)
 		}
 
 		return
 	}
 
-	// Arşiv dosyası içinde arama yap
 	results, err := searchInArchive(fullArchivePath, searchText, fileType, outputFilePath)
 	if err != nil {
-		fmt.Println("Hata:", err)
+		fmt.Println("Error:", err)
 		return
 	}
 
-	// Eğer sonuç yoksa dosyaya yazma işlemi yapma
 	if len(results) == 0 {
-		fmt.Println("Arama tamamlandı. Sonuç bulunamadı.")
+		fmt.Println("Search completed. No results found.")
 		return
 	}
 
-	fmt.Println("Arama tamamlandı. Sonuçlar terminale yazıldı.")
+	fmt.Println("Search completed. Results printed to the terminal.")
 
-	// Dosyaya yazma işlemi yapılmışsa bilgi mesajı göster
 	if outputFilePath != "" {
-		fmt.Println("Sonuçlar", outputFilePath, "dosyasına kaydedildi.")
+		fmt.Println("Results saved to", outputFilePath)
 	}
 
-	// Eğer deleteFile true ise dosyayı sil
 	if deleteFile {
 		err := os.Remove(fullArchivePath)
 		if err != nil {
-			fmt.Println("Dosya silinemedi:", err)
+			fmt.Println("Error deleting file:", err)
 		} else {
-			fmt.Println("Dosya başarıyla silindi.")
+			fmt.Println("File successfully deleted.")
 		}
 	}
 }
