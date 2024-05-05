@@ -1,6 +1,4 @@
-# AKINCI Finder Tool
-
-![asciiart](ascii_art.png)
+# Yıldız Finder Tool
 
 Bu program, belirtilen bir metin dosyasında belirli bir metni arayan basit bir metin dosyası arama programıdır. Kullanıcı, aranacak metni ve aranacak dosyanın yolunu parametre olarak verir. Program, dosyayı açar, her satırı tarar ve aranan metni içeren satırları terminalde gösterir. Eğer aranan metin bulunamazsa, buna dair bir mesaj verir. Arama işlemi tamamlandıktan sonra geçen süreyi de kullanıcıya bildirir.
 
